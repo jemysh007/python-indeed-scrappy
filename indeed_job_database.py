@@ -27,12 +27,32 @@ class IndeedJobDatabaseManager:
     def view_data(self, location, title):
         try:
             cursor = self.conn.cursor(dictionary=True)
-            cursor.execute("""
-                SELECT * FROM indeed_jobs
-                WHERE location LIKE %s AND title LIKE %s
-                ORDER BY created_on DESC
-            """, (f"%{location}%", f"%{title}%"))
+            if not title and location:
+                # Only location provided
+                cursor.execute("""
+                    SELECT id, title, company, job_link, location, date_of_post
+                    FROM indeed_jobs
+                    WHERE location LIKE %s
+                    ORDER BY created_on DESC
+                """, (f"%{location}%",))
 
+            elif title and not location:
+                # Only title provided
+                cursor.execute("""
+                    SELECT id, title, company, job_link, location, date_of_post
+                    FROM indeed_jobs
+                    WHERE title LIKE %s
+                    ORDER BY created_on DESC
+                """, (f"%{title}%",))
+
+            else:
+                # Both title and location provided
+                cursor.execute("""
+                    SELECT id, title, company, job_link, location, date_of_post
+                    FROM indeed_jobs
+                    WHERE location LIKE %s AND title LIKE %s
+                    ORDER BY created_on DESC
+                """, (f"%{location}%", f"%{title}%"))
 
             results = cursor.fetchall()
 
@@ -80,11 +100,32 @@ class IndeedJobDatabaseManager:
 
             print(location)
             cursor = self.conn.cursor(dictionary=True)
-            cursor.execute("""
-                SELECT * FROM indeed_jobs
-                WHERE location LIKE %s AND title LIKE %s OR %s = ''
-                ORDER BY created_on DESC
-            """, (f"%{location}%", f"%{title}%", title))
+            if not title and location:
+                # Only location provided
+                cursor.execute("""
+                    SELECT id, title, company, job_link, location, date_of_post
+                    FROM indeed_jobs
+                    WHERE location LIKE %s
+                    ORDER BY created_on DESC
+                """, (f"%{location}%",))
+
+            elif title and not location:
+                # Only title provided
+                cursor.execute("""
+                    SELECT id, title, company, job_link, location, date_of_post
+                    FROM indeed_jobs
+                    WHERE title LIKE %s
+                    ORDER BY created_on DESC
+                """, (f"%{title}%",))
+
+            else:
+                # Both title and location provided
+                cursor.execute("""
+                    SELECT id, title, company, job_link, location, date_of_post
+                    FROM indeed_jobs
+                    WHERE location LIKE %s AND title LIKE %s
+                    ORDER BY created_on DESC
+                """, (f"%{location}%", f"%{title}%"))
 
             results = cursor.fetchall()
 
