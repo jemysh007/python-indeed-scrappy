@@ -77,12 +77,14 @@ class IndeedJobDatabaseManager:
 
     def export_data(self, location, title):
         try:
+
+            print(location)
             cursor = self.conn.cursor(dictionary=True)
             cursor.execute("""
                 SELECT * FROM indeed_jobs
                 WHERE location LIKE %s AND title LIKE %s OR %s = ''
                 ORDER BY created_on DESC
-            """, (f"%{location}%", f"%{title}%", ''))
+            """, (f"%{location}%", f"%{title}%", title))
 
             results = cursor.fetchall()
 
