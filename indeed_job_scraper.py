@@ -8,6 +8,9 @@ import time
 import json
 import mysql.connector
 from mysql.connector import Error
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class IndeedJobScraper:
     def __init__(self):
@@ -28,9 +31,9 @@ class IndeedJobScraper:
     def connect_to_database(self):
         try:
             self.conn = mysql.connector.connect(
-                host="localhost",
-                user="root",  
-                password="", 
+                host=os.getenv('DB_HOST'),
+                user=os.getenv('DB_USER'),  
+                password=os.getenv('DB_PASSWORD'), 
             )
           
             self.initDatabase()
@@ -42,19 +45,22 @@ class IndeedJobScraper:
 
     def initDatabase(self):
         # Create 'scrappy' database if not exists
+
+        db_name = os.getenv('DB_NAME', 'scrappy')
+
         try:
             cursor = self.conn.cursor()
-            cursor.execute("CREATE DATABASE IF NOT EXISTS scrappy")
+            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
             self.conn.commit()
 
-            print("Database 'scrappy' created successfully.")
+            print("Database created successfully.")
         except Error as e:
             print(f"Error: {e}")
 
         # Use 'scrappy' database
         try:
             cursor = self.conn.cursor()
-            cursor.execute("USE scrappy")
+            cursor.execute(f"USE {db_name}")
             self.conn.commit()
             print("Using database 'scrappy'.")
         except Error as e:

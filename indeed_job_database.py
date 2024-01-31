@@ -4,6 +4,9 @@ import mysql.connector
 from mysql.connector import Error
 from prettytable import PrettyTable
 import datetime
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class IndeedJobDatabaseManager:
     def __init__(self):
@@ -13,10 +16,10 @@ class IndeedJobDatabaseManager:
     def connect_to_database(self):
         try:
             self.conn = mysql.connector.connect(
-                host="localhost",
-                user="root",
-                password="",
-                database="scrappy"
+                host=os.getenv('DB_HOST'),
+                user=os.getenv('DB_USER'),
+                password=os.getenv('DB_PASSWORD'),
+                database=os.getenv('DB_NAME')
             )
 
             if self.conn.is_connected():
