@@ -2,3 +2,4 @@ argparse
 mysql-connector-python
 prettytable
 selenium
+python-dotenv
