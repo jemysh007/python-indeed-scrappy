@@ -30,6 +30,7 @@ class IndeedJobDatabaseManager:
             cursor.execute("""
                 SELECT * FROM indeed_jobs
                 WHERE location LIKE %s AND title LIKE %s
+                ORDER BY created_on DESC
             """, (f"%{location}%", f"%{title}%"))
 
 
@@ -80,6 +81,7 @@ class IndeedJobDatabaseManager:
             cursor.execute("""
                 SELECT * FROM indeed_jobs
                 WHERE location LIKE %s AND title LIKE %s OR %s = ''
+                ORDER BY created_on DESC
             """, (f"%{location}%", f"%{title}%", ''))
 
             results = cursor.fetchall()
