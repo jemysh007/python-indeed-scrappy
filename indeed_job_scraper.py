@@ -26,6 +26,8 @@ class IndeedJobScraper:
         # Set up Selenium with a headless browser
         options = Options()
         options.headless = True
+        options.add_argument("--window-size=3,2")  # Adjust the values as needed
+
         self.driver = webdriver.Chrome(options=options)
 
     def connect_to_database(self):
@@ -115,7 +117,7 @@ class IndeedJobScraper:
 
         try:
             date_element = WebDriverWait(card, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'span.date'))
+                EC.presence_of_element_located((By.CSS_SELECTOR, '[data-testid="myJobsStateDate"]'))
             )
             date_text = date_element.text
             date = date_text.replace("Employer", "").strip()
@@ -220,26 +222,39 @@ class IndeedJobScraper:
         except Error as e:
             print(f"Error: {e}")
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Scrape Indeed job data")
-    parser.add_argument("--title", required=True, help="Job title to search for")
-    parser.add_argument("--location", required=True, help="Location to search for jobs")
-    parser.add_argument("--pages", type=int, default=2, help="Number of pages to scrape (default is 2)")
-    parser.add_argument("--job_type", type=int, default=0, help="Type of job (default is 1)")
-    parser.add_argument("--locale", default="de", help="Localization")
+def load_config(file_path):
+    abs_file_path = os.path.abspath(file_path)
+    try:
+        with open(abs_file_path, "r") as json_file:
+            config = json.load(json_file)
+        return config
+    except FileNotFoundError:
+        print(f"Config file {abs_file_path} not found. Using default values.")
+        return {}
 
-    args = parser.parse_args()
+if __name__ == "__main__":
+    # parser = argparse.ArgumentParser(description="Scrape Indeed job data")
+    # parser.add_argument("--title", required=True, help="Job title to search for")
+    # parser.add_argument("--location", required=True, help="Location to search for jobs")
+    # parser.add_argument("--pages", type=int, default=2, help="Number of pages to scrape (default is 2)")
+    # parser.add_argument("--job_type", type=int, default=0, help="Type of job (default is 1)")
+    # parser.add_argument("--locale", default="de", help="Localization")
+
+    # args = parser.parse_args()
 
     scraper = IndeedJobScraper()
 
-    job_type = args.job_type
-    for i in range(1, 5):
-        print(f"{i}: {scraper.select_job_type(i)}")
+    # job_type = args.job_type
+    # for i in range(1, 5):
+    #     print(f"{i}: {scraper.select_job_type(i)}")
     
-    if(args.job_type == 0):
-        job_type = input("Please Select any Job Type: ")
+    # if(args.job_type == 0):
+    #     job_type = input("Please Select any Job Type: ")
     
-    scraper.scrape_jobs(args.title, args.location, args.pages, job_type, args.locale)
+    config = load_config("config.json")
+    print(config)
+
+    scraper.scrape_jobs(config['title'], config['location'], int(config['pages']), config['job_type'], config['locale'])
     scraper.save_to_json()    
         
     
