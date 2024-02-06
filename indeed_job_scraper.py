@@ -48,6 +48,7 @@ class IndeedJobScraper:
                     job_link TEXT,
                     location TEXT,
                     location_search TEXT,
+                    search_query TEXT,
                     date_of_post DATE,
                     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
@@ -134,7 +135,7 @@ class IndeedJobScraper:
                         # Save job data to the database
                         if job_data["Date"] is not None:
                             self.job_data_list.append(job_data)
-                            self.save_to_database(job_data)
+                            self.save_to_database(job_data, url)
 
                 # Break the loop if the number of job cards is less than 15
                 if len(job_cards) < 15:
@@ -176,7 +177,7 @@ class IndeedJobScraper:
             json.dump(self.job_data_list, json_file, ensure_ascii=False, indent=2)
         print(f"Data saved to {output_file_path}.")
 
-    def save_to_database(self, job_data):
+    def save_to_database(self, job_data, url):
         try:
             cursor = self.conn.cursor()
             # Check if the job link already exists in the 'indeed_jobs' table
@@ -186,9 +187,9 @@ class IndeedJobScraper:
                 if not existing_job_id:
                     # Job link does not exist, insert the new job data
                     cursor.execute("""
-                        INSERT INTO indeed_jobs (title, company, job_link, location, date_of_post, title_search, location_search)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
-                    """, (job_data["Title"], job_data["Company"], job_data["Job Link"], job_data["Location"], job_data["Date"], self.title, self.location))
+                        INSERT INTO indeed_jobs (title, company, job_link, location, date_of_post, title_search, location_search, search_query)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (job_data["Title"], job_data["Company"], job_data["Job Link"], job_data["Location"], job_data["Date"], self.title, self.location, url))
 
                     self.conn.commit()
                     print(f"Job data saved to the database.")
