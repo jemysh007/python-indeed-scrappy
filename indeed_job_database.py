@@ -23,28 +23,28 @@ class IndeedJobDatabaseManager:
             if not title and location:
                 # Only location provided
                 cursor.execute("""
-                    SELECT id, title, company, job_link, location, date_of_post
+                    SELECT id, title, company, job_link, location, date_of_post, created_on
                     FROM indeed_jobs
                     WHERE location_search LIKE ? 
-                    ORDER BY created_on DESC
+                    ORDER BY date_of_post DESC
                 """, (f"%{location}%",))
 
             elif title and not location:
                 # Only title provided
                 cursor.execute("""
-                    SELECT id, title, company, job_link, location, date_of_post
+                    SELECT id, title, company, job_link, location, date_of_post, created_on
                     FROM indeed_jobs
                     WHERE title_search LIKE ? 
-                    ORDER BY created_on DESC
+                    ORDER BY date_of_post DESC
                 """, (f"%{title}%",))
 
             else:
                 # Both title and location provided
                 cursor.execute("""
-                    SELECT id, title, company, job_link, location, date_of_post
+                    SELECT id, title, company, job_link, location, date_of_post, created_on
                     FROM indeed_jobs
                     WHERE location_search LIKE ? AND title_search LIKE ? 
-                    ORDER BY created_on DESC
+                    ORDER BY date_of_post DESC
                 """, (f"%{location}%", f"%{title}%"))
 
             results = cursor.fetchall()
@@ -54,7 +54,7 @@ class IndeedJobDatabaseManager:
                 return
 
             table = PrettyTable()
-            table.field_names = ["ID", "Title", "Company", "Job Link", "Location", "Date of Post"]
+            table.field_names = ["ID", "Title", "Company", "Job Link", "Location", "Date of Post", "created_on"]
 
             for row in results:
                 table.add_row(row)
@@ -96,7 +96,7 @@ class IndeedJobDatabaseManager:
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
                     WHERE location_search LIKE ? 
-                    ORDER BY created_on DESC
+                    ORDER BY date_of_post DESC
                 """, (f"%{location}%",))
 
             elif title and not location:
@@ -104,7 +104,7 @@ class IndeedJobDatabaseManager:
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
                     WHERE title_search LIKE ? 
-                    ORDER BY created_on DESC
+                    ORDER BY date_of_post DESC
                 """, (f"%{title}%",))
 
             else:
@@ -112,7 +112,7 @@ class IndeedJobDatabaseManager:
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
                     WHERE location_search LIKE ? AND title_search LIKE ? 
-                    ORDER BY created_on DESC
+                    ORDER BY date_of_post DESC
                 """, (f"%{location}%", f"%{title}%"))
 
             results = cursor.fetchall()

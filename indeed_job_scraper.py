@@ -11,7 +11,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 import traceback
-
+from datetime import datetime, timedelta
 
 class IndeedJobScraper:
     def __init__(self):
@@ -48,7 +48,7 @@ class IndeedJobScraper:
                     job_link TEXT,
                     location TEXT,
                     location_search TEXT,
-                    date_of_post TEXT,
+                    date_of_post DATE,
                     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -91,9 +91,10 @@ class IndeedJobScraper:
             )
             date_text = date_element.text
             date = date_text.replace("Employer", "").strip()
-            date = date_text.replace("Posted", "").strip()
+            date = date.replace("Posted", "").strip()
+            date = convert_date(date)
         except:
-            date = "N/A"
+            date = None
 
         return {
             "Title": title,
@@ -129,10 +130,11 @@ class IndeedJobScraper:
                     # Check if the job link is not in the set to avoid duplicates
                     if job_link not in self.processed_job_links:
                         self.processed_job_links.add(job_link)
-                        self.job_data_list.append(job_data)
 
                         # Save job data to the database
-                        self.save_to_database(job_data)
+                        if job_data["Date"] is not None:
+                            self.job_data_list.append(job_data)
+                            self.save_to_database(job_data)
 
                 # Break the loop if the number of job cards is less than 15
                 if len(job_cards) < 15:
@@ -195,6 +197,25 @@ class IndeedJobScraper:
 
         except sqlite3.Error as e:
             print(f"Error: {e}")
+
+def convert_date(date_str):
+    if "Aktiv" in date_str:
+        days_ago = int(date_str.split("Aktiv: vor ")[1].split(" ")[0])
+        date = None
+    elif "Vor" in date_str:
+        days_ago = int(date_str.split("Vor ")[1].split(" ")[0])
+        date = datetime.today() - timedelta(days=days_ago)
+    elif "Heute" in date_str:
+        date = datetime.today()
+    else:
+        date = None
+    
+    if date:
+        return date.strftime("%Y-%m-%d")
+    else:
+        return None
+
+
 
 def load_config(file_path):
     abs_file_path = os.path.abspath(file_path)
