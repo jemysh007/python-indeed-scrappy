@@ -1,12 +1,9 @@
 import argparse
 import csv
-import mysql.connector
-from mysql.connector import Error
+import sqlite3
 from prettytable import PrettyTable
 import datetime
 import os
-from dotenv import load_dotenv
-load_dotenv()
 
 class IndeedJobDatabaseManager:
     def __init__(self):
@@ -15,27 +12,22 @@ class IndeedJobDatabaseManager:
 
     def connect_to_database(self):
         try:
-            self.conn = mysql.connector.connect(
-                host=os.getenv('DB_HOST'),
-                user=os.getenv('DB_USER'),
-                password=os.getenv('DB_PASSWORD'),
-                database=os.getenv('DB_NAME')
-            )
-
-            if self.conn.is_connected():
-                print("Connected to the database")
-        except Error as e:
+            self.conn = sqlite3.connect("scrappy.db")
+            print("Connected to the database")
+        except sqlite3.Error as e:
             print(f"Error: {e}")
 
     def view_data(self, location, title):
         try:
-            cursor = self.conn.cursor(dictionary=True)
+            cursor = self.conn.cursor()
             if not title and location:
                 # Only location provided
+
+                
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE location LIKE %s
+                    WHERE location LIKE ?
                     ORDER BY created_on DESC
                 """, (f"%{location}%",))
 
@@ -44,7 +36,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE title LIKE %s
+                    WHERE title LIKE ?
                     ORDER BY created_on DESC
                 """, (f"%{title}%",))
 
@@ -53,7 +45,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE location LIKE %s AND title LIKE %s
+                    WHERE location LIKE ? AND title LIKE ?
                     ORDER BY created_on DESC
                 """, (f"%{location}%", f"%{title}%"))
 
@@ -67,11 +59,11 @@ class IndeedJobDatabaseManager:
             table.field_names = ["ID", "Title", "Company", "Job Link", "Location", "Date of Post"]
 
             for row in results:
-                table.add_row([row["id"], row["title"], row["company"], row["job_link"], row["location"], row["date_of_post"]])
+                table.add_row(row)
 
             print(table)
 
-        except Error as e:
+        except sqlite3.Error as e:
             print(f"Error: {e}")
 
     def delete_data(self, location, title):
@@ -79,54 +71,49 @@ class IndeedJobDatabaseManager:
             cursor = self.conn.cursor()
             cursor.execute("""
                 DELETE FROM indeed_jobs
-                WHERE location LIKE %s AND title LIKE %s
+                WHERE location LIKE ? AND title LIKE ?
             """, (f"%{location}%", f"%{title}%"))
 
             self.conn.commit()
             print(f"Data deleted successfully.")
 
-        except Error as e:
+        except sqlite3.Error as e:
             print(f"Error: {e}")
 
     def clear_table(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute("TRUNCATE TABLE indeed_jobs")
+            cursor.execute("DELETE FROM indeed_jobs")
             self.conn.commit()
             print("Table indeed_jobs cleared successfully.")
 
-        except Error as e:
+        except sqlite3.Error as e:
             print(f"Error: {e}")
 
     def export_data(self, location, title):
         try:
-
-            print(location)
-            cursor = self.conn.cursor(dictionary=True)
+            cursor = self.conn.cursor()
             if not title and location:
-                # Only location provided
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE location LIKE %s
+                    WHERE location LIKE ?
                     ORDER BY created_on DESC
                 """, (f"%{location}%",))
 
             elif title and not location:
-                # Only title provided
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE title LIKE %s
+                    WHERE title LIKE ?
                     ORDER BY created_on DESC
                 """, (f"%{title}%",))
 
             else:
-                # Both title and location provided
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE location LIKE %s AND title LIKE %s
+                    WHERE location LIKE ? AND title LIKE ?
                     ORDER BY created_on DESC
                 """, (f"%{location}%", f"%{title}%"))
 
@@ -147,12 +134,11 @@ class IndeedJobDatabaseManager:
                 writer.writeheader()
                 for row in results:
                     # Extract only the relevant fields present in 'fieldnames'
-                    row_to_write = {key: row[key] for key in fieldnames}
-                    writer.writerow(row_to_write)
+                    writer.writerow(dict(zip(fieldnames, row)))
 
             print(f"Data exported to {export_file_path}")
 
-        except Error as e:
+        except sqlite3.Error as e:
             print(f"Error: {e}")
 
 

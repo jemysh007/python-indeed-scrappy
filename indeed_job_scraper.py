@@ -6,8 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 import json
-import mysql.connector
-from mysql.connector import Error
+import sqlite3
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -18,54 +17,21 @@ class IndeedJobScraper:
         self.processed_job_links = set()
         
         self.conn = None
-        self.db = None
 
         self.connect_to_database() 
         self.create_jobs_table()
 
-        # Set up Selenium with a headless browser
         options = Options()
         options.headless = True
-        options.add_argument("--window-size=3,2")  # Adjust the values as needed
+        options.add_argument("--window-size=3,2")
 
         self.driver = webdriver.Chrome(options=options)
 
     def connect_to_database(self):
         try:
-            self.conn = mysql.connector.connect(
-                host=os.getenv('DB_HOST'),
-                user=os.getenv('DB_USER'),  
-                password=os.getenv('DB_PASSWORD'), 
-            )
-          
-            self.initDatabase()
-
-            if self.conn.is_connected():
-                print("Connected to the database")
-        except Error as e:
-            print(f"Error: {e}")
-
-    def initDatabase(self):
-        # Create 'scrappy' database if not exists
-
-        db_name = os.getenv('DB_NAME', 'scrappy')
-
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
-            self.conn.commit()
-
-            print("Database created successfully.")
-        except Error as e:
-            print(f"Error: {e}")
-
-        # Use 'scrappy' database
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute(f"USE {db_name}")
-            self.conn.commit()
-            print("Using database 'scrappy'.")
-        except Error as e:
+            self.conn = sqlite3.connect("scrappy.db")
+            print("Connected to the database")
+        except sqlite3.Error as e:
             print(f"Error: {e}")
 
     def create_jobs_table(self):
@@ -73,18 +39,18 @@ class IndeedJobScraper:
             cursor = self.conn.cursor()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS indeed_jobs (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
-                    title VARCHAR(255),
-                    company VARCHAR(255),
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    title TEXT,
+                    company TEXT,
                     job_link TEXT,
-                    location VARCHAR(255),
-                    date_of_post VARCHAR(255),
+                    location TEXT,
+                    date_of_post TEXT,
                     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
             self.conn.commit()
             print("Table 'indeed_jobs' created successfully.")
-        except Error as e:
+        except sqlite3.Error as e:
             print(f"Error: {e}")
 
     def extract_job_details(self, card):
@@ -136,6 +102,7 @@ class IndeedJobScraper:
     def scrape_jobs(self, designation, location, num_pages, job_type, locale="de"):
         job_type = self.select_job_type(job_type)
         self.locale = locale
+        self.location = location
         language = "in" if locale == "in" else "de"
 
         try:
@@ -204,22 +171,22 @@ class IndeedJobScraper:
         try:
             cursor = self.conn.cursor()
             # Check if the job link already exists in the 'indeed_jobs' table
-            cursor.execute("SELECT id FROM indeed_jobs WHERE title = %s AND company = %s AND date_of_post = %s", (job_data["Title"], job_data["Company"], job_data["Date"]))
+            cursor.execute("SELECT id FROM indeed_jobs WHERE title = ? AND company = ? AND date_of_post = ?", (job_data["Title"], job_data["Company"], job_data["Date"]))
             existing_job_id = cursor.fetchone()
             if(job_data['Title']):
                 if not existing_job_id:
                     # Job link does not exist, insert the new job data
                     cursor.execute("""
                         INSERT INTO indeed_jobs (title, company, job_link, location, date_of_post)
-                        VALUES (%s, %s, %s, %s, %s)
-                    """, (job_data["Title"], job_data["Company"], job_data["Job Link"], job_data["Location"], job_data["Date"]))
+                        VALUES (?, ?, ?, ?, ?)
+                    """, (job_data["Title"], job_data["Company"], job_data["Job Link"], self.location, job_data["Date"]))
 
                     self.conn.commit()
                     print(f"Job data saved to the database.")
             else:
                 print(f"Job with link '{job_data['Job Link']}' already exists in the database.")
 
-        except Error as e:
+        except sqlite3.Error as e:
             print(f"Error: {e}")
 
 def load_config(file_path):
@@ -256,7 +223,3 @@ if __name__ == "__main__":
 
     scraper.scrape_jobs(config['title'], config['location'], int(config['pages']), config['job_type'], config['locale'])
     scraper.save_to_json()    
-        
-    
-
-    

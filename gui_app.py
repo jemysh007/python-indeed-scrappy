@@ -94,6 +94,8 @@ class IndeedJobScraperGUI:
 
     def load_config(self, file_path):
         abs_file_path = os.path.abspath(file_path)
+        if not os.path.exists(abs_file_path):  # Check if config file exists
+            self.create_default_config(abs_file_path)
         try:
             with open(abs_file_path, "r") as json_file:
                 config = json.load(json_file)
@@ -101,6 +103,17 @@ class IndeedJobScraperGUI:
         except FileNotFoundError:
             messagebox.showwarning("Warning", f"Config file {abs_file_path} not found. Using default values.")
             return {}
+        
+    def create_default_config(self, file_path):
+        default_config = {
+            "title": "web",
+            "location": "Berlin",
+            "pages": "2",
+            "job_type": "1",
+            "locale": "de"
+        }
+        with open(file_path, "w") as json_file:
+            json.dump(default_config, json_file, indent=4)
 
     def update_config(self, file_path, new_config):
         try:
