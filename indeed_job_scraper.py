@@ -10,6 +10,8 @@ import sqlite3
 import os
 from dotenv import load_dotenv
 load_dotenv()
+import traceback
+
 
 class IndeedJobScraper:
     def __init__(self):
@@ -41,9 +43,11 @@ class IndeedJobScraper:
                 CREATE TABLE IF NOT EXISTS indeed_jobs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     title TEXT,
+                    title_search TEXT,
                     company TEXT,
                     job_link TEXT,
                     location TEXT,
+                    location_search TEXT,
                     date_of_post TEXT,
                     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
@@ -103,6 +107,7 @@ class IndeedJobScraper:
         job_type = self.select_job_type(job_type)
         self.locale = locale
         self.location = location
+        self.title = designation
         language = "in" if locale == "in" else "de"
 
         try:
@@ -135,6 +140,8 @@ class IndeedJobScraper:
 
         except Exception as e:
             print(f"Error: {e}")
+            traceback.print_exc()
+
 
         finally:
             print("Scraping complete.")
@@ -177,9 +184,9 @@ class IndeedJobScraper:
                 if not existing_job_id:
                     # Job link does not exist, insert the new job data
                     cursor.execute("""
-                        INSERT INTO indeed_jobs (title, company, job_link, location, date_of_post)
-                        VALUES (?, ?, ?, ?, ?)
-                    """, (job_data["Title"], job_data["Company"], job_data["Job Link"], self.location, job_data["Date"]))
+                        INSERT INTO indeed_jobs (title, company, job_link, location, date_of_post, title_search, location_search)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, (job_data["Title"], job_data["Company"], job_data["Job Link"], job_data["Location"], job_data["Date"], self.title, self.location))
 
                     self.conn.commit()
                     print(f"Job data saved to the database.")

@@ -64,6 +64,8 @@ class IndeedJobScraperGUI:
         self.export_button = ttk.Button(self.master, text="Export Database", command=self.export_database)
         self.export_button.grid(row=8, column=0, columnspan=2, pady=10)
 
+        self.clear_button = ttk.Button(self.master, text="Clear Database", command=self.clear_database)
+        self.clear_button.grid(row=9, column=0, columnspan=2, pady=10)
 
     def export_database(self):
             title = self.title_entry.get()
@@ -78,6 +80,16 @@ class IndeedJobScraperGUI:
             except Exception as e:
                 messagebox.showerror("Error", f"Failed to export database: {e}")
 
+    def clear_database(self):
+            try:
+                # Instantiate the IndeedJobDatabaseManager
+                database_manager = IndeedJobDatabaseManager()
+
+                # Clear the database
+                database_manager.delete_data("","")
+                messagebox.showinfo("Success", "Database cleared successfully.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Failed to clear database: {e}")
 
     def run_script(self):
         title = self.title_entry.get()
