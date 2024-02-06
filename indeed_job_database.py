@@ -22,12 +22,10 @@ class IndeedJobDatabaseManager:
             cursor = self.conn.cursor()
             if not title and location:
                 # Only location provided
-
-                
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE location LIKE ?
+                    WHERE location LIKE ? AND created_on >= datetime('now', '-5 days')
                     ORDER BY created_on DESC
                 """, (f"%{location}%",))
 
@@ -36,7 +34,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE title LIKE ?
+                    WHERE title LIKE ? AND created_on >= datetime('now', '-5 days')
                     ORDER BY created_on DESC
                 """, (f"%{title}%",))
 
@@ -45,7 +43,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE location LIKE ? AND title LIKE ?
+                    WHERE location LIKE ? AND title LIKE ? AND created_on >= datetime('now', '-5 days')
                     ORDER BY created_on DESC
                 """, (f"%{location}%", f"%{title}%"))
 
@@ -97,7 +95,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE location LIKE ?
+                    WHERE location LIKE ? AND created_on >= datetime('now', '-5 days')
                     ORDER BY created_on DESC
                 """, (f"%{location}%",))
 
@@ -105,7 +103,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE title LIKE ?
+                    WHERE title LIKE ? AND created_on >= datetime('now', '-5 days')
                     ORDER BY created_on DESC
                 """, (f"%{title}%",))
 
@@ -113,7 +111,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post
                     FROM indeed_jobs
-                    WHERE location LIKE ? AND title LIKE ?
+                    WHERE location LIKE ? AND title LIKE ? AND created_on >= datetime('now', '-5 days')
                     ORDER BY created_on DESC
                 """, (f"%{location}%", f"%{title}%"))
 
