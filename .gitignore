@@ -161,3 +161,7 @@ cython_debug/
 
 export_*.csv
 job_data.json
+scrappy.db
+dist/scrappy.db
+dist/config.json
+config.json

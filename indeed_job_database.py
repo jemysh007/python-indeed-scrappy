@@ -93,7 +93,7 @@ class IndeedJobDatabaseManager:
             cursor = self.conn.cursor()
             if not title and location:
                 cursor.execute("""
-                    SELECT id, title, company, job_link, location, date_of_post, search_query
+                    SELECT id, title, company, job_link, location, date_of_post, search_query, job_type
                     FROM indeed_jobs
                     WHERE location_search LIKE ? 
                     ORDER BY date_of_post DESC
@@ -101,7 +101,7 @@ class IndeedJobDatabaseManager:
 
             elif title and not location:
                 cursor.execute("""
-                    SELECT id, title, company, job_link, location, date_of_post, search_query
+                    SELECT id, title, company, job_link, location, date_of_post, search_query, job_type
                     FROM indeed_jobs
                     WHERE title_search LIKE ? 
                     ORDER BY date_of_post DESC
@@ -109,7 +109,7 @@ class IndeedJobDatabaseManager:
 
             else:
                 cursor.execute("""
-                    SELECT id, title, company, job_link, location, date_of_post, search_query
+                    SELECT id, title, company, job_link, location, date_of_post, search_query, job_type
                     FROM indeed_jobs
                     WHERE location_search LIKE ? AND title_search LIKE ? 
                     ORDER BY date_of_post DESC
@@ -126,7 +126,7 @@ class IndeedJobDatabaseManager:
             export_file_path = f"export_{location}_{title}_jobs_{timestamp}.csv"
 
             with open(export_file_path, 'w', newline='') as csvfile:
-                fieldnames = ["id", "title", "company", "job_link", "location", "date_of_post", "search_query"]
+                fieldnames = ["id", "title", "company", "job_link", "location", "date_of_post", "search_query", "job_type"]
                 writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
                 writer.writeheader()
@@ -138,7 +138,6 @@ class IndeedJobDatabaseManager:
 
         except sqlite3.Error as e:
             print(f"Error: {e}")
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage Indeed job database")

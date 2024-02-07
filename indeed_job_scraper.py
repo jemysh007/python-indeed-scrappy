@@ -46,6 +46,7 @@ class IndeedJobScraper:
                     title_search TEXT,
                     company TEXT,
                     job_link TEXT,
+                    job_type TEXT,
                     location TEXT,
                     location_search TEXT,
                     search_query TEXT,
@@ -135,7 +136,8 @@ class IndeedJobScraper:
                         # Save job data to the database
                         if job_data["Date"] is not None:
                             self.job_data_list.append(job_data)
-                            self.save_to_database(job_data, url)
+                            dbURL = f"https://{self.locale}.indeed.com/jobs?q={designation}"
+                            self.save_to_database(job_data, dbURL, job_type)
 
                 # Break the loop if the number of job cards is less than 15
                 if len(job_cards) < 15:
@@ -144,7 +146,6 @@ class IndeedJobScraper:
         except Exception as e:
             print(f"Error: {e}")
             traceback.print_exc()
-
 
         finally:
             print("Scraping complete.")
@@ -177,7 +178,7 @@ class IndeedJobScraper:
             json.dump(self.job_data_list, json_file, ensure_ascii=False, indent=2)
         print(f"Data saved to {output_file_path}.")
 
-    def save_to_database(self, job_data, url):
+    def save_to_database(self, job_data, url, job_type):
         try:
             cursor = self.conn.cursor()
             # Check if the job link already exists in the 'indeed_jobs' table
@@ -187,9 +188,9 @@ class IndeedJobScraper:
                 if not existing_job_id:
                     # Job link does not exist, insert the new job data
                     cursor.execute("""
-                        INSERT INTO indeed_jobs (title, company, job_link, location, date_of_post, title_search, location_search, search_query)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """, (job_data["Title"], job_data["Company"], job_data["Job Link"], job_data["Location"], job_data["Date"], self.title, self.location, url))
+                        INSERT INTO indeed_jobs (title, company, job_link, location, date_of_post, title_search, location_search, search_query, job_type)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (job_data["Title"], job_data["Company"], job_data["Job Link"], job_data["Location"], job_data["Date"], self.title, self.location, url, job_type))
 
                     self.conn.commit()
                     print(f"Job data saved to the database.")
@@ -200,41 +201,27 @@ class IndeedJobScraper:
             print(f"Error: {e}")
 
 def convert_date(date_str):
-    if "geplaatst" in date_str:  # Dutch
-        if "Actief" not in date_str:
-            days_ago = int(date_str.split(" dagen geleden")[0])
-            date = datetime.today() - timedelta(days=days_ago)
-        else:
-            date = None
-    if "Actief" in date_str:  # Dutch
-            date = None
-    elif "Active" in date_str:  # English
-            date = None
-    elif "Aktiv" in date_str:  # German
-            date = None
-    elif "Vor" in date_str:  # German
-        if "Aktiv" not in date_str:
-            days_ago = int(date_str.split(" Tagen")[0])
-            date = datetime.today() - timedelta(days=days_ago)
-        else:
-            date = None
-    elif "Heute" in date_str:  # German
-        date = datetime.today()
-    elif "Vandaag" in date_str:  # Dutch
-        date = datetime.today()
-    elif "Today" in date_str:  # English
-        date = datetime.today()
-    elif "Just posted" in date_str:  # English
-        date = datetime.today()
+    if "Zojuist geplaatst" in date_str or "Vandaag" in date_str:
+        return datetime.today().strftime("%Y-%m-%d")  # Dutch
+    elif "Just posted" in date_str or "Today" in date_str:
+        return datetime.today().strftime("%Y-%m-%d")  # English
+    elif "Gerade geschaltet" in date_str or "Heute" in date_str:
+        return datetime.today().strftime("%Y-%m-%d")  # German
+
+    if "Aktiv" in date_str or "Actief" in date_str:
+        days_ago = int(date_str.split(":")[1].strip().split(" ")[0])
+        date = datetime.today() - timedelta(days=days_ago)
+    elif "Vor" in date_str or "geleden" in date_str or "vor" in date_str:
+        days_ago = int(date_str.split(" ")[1])
+        date = datetime.today() - timedelta(days=days_ago)
     else:
-        return date_str
-        
+        date = None
+    
     if date:
         return date.strftime("%Y-%m-%d")
     else:
         return None
-
-
+    
 def load_config(file_path):
     abs_file_path = os.path.abspath(file_path)
     try:
