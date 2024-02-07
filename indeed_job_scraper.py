@@ -206,11 +206,11 @@ def convert_date(date_str):
             date = datetime.today() - timedelta(days=days_ago)
         else:
             date = None
-    elif "ago" in date_str:  # English
-        if "Active" not in date_str:
-            days_ago = int(date_str.split(" days ago")[0])
-            date = datetime.today() - timedelta(days=days_ago)
-        else:
+    if "Actief" in date_str:  # Dutch
+            date = None
+    elif "Active" in date_str:  # English
+            date = None
+    elif "Aktiv" in date_str:  # German
             date = None
     elif "Vor" in date_str:  # German
         if "Aktiv" not in date_str:
