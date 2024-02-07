@@ -49,7 +49,7 @@ class IndeedJobScraper:
                     location TEXT,
                     location_search TEXT,
                     search_query TEXT,
-                    date_of_post DATE,
+                    date_of_post TEXT,
                     created_on DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             """)
@@ -110,7 +110,7 @@ class IndeedJobScraper:
         self.locale = locale
         self.location = location
         self.title = designation
-        language = "in" if locale == "in" else "de"
+        language = "in" if locale == "in" else "de" if locale == "de" else ""
 
         try:
             for page in range(0, num_pages):
@@ -200,22 +200,39 @@ class IndeedJobScraper:
             print(f"Error: {e}")
 
 def convert_date(date_str):
-    if "Aktiv" in date_str:
-        days_ago = int(date_str.split("Aktiv: vor ")[1].split(" ")[0])
-        date = None
-    elif "Vor" in date_str:
-        days_ago = int(date_str.split("Vor ")[1].split(" ")[0])
-        date = datetime.today() - timedelta(days=days_ago)
-    elif "Heute" in date_str:
+    if "geplaatst" in date_str:  # Dutch
+        if "Actief" not in date_str:
+            days_ago = int(date_str.split(" dagen geleden")[0])
+            date = datetime.today() - timedelta(days=days_ago)
+        else:
+            date = None
+    elif "ago" in date_str:  # English
+        if "Active" not in date_str:
+            days_ago = int(date_str.split(" days ago")[0])
+            date = datetime.today() - timedelta(days=days_ago)
+        else:
+            date = None
+    elif "Vor" in date_str:  # German
+        if "Aktiv" not in date_str:
+            days_ago = int(date_str.split(" Tagen")[0])
+            date = datetime.today() - timedelta(days=days_ago)
+        else:
+            date = None
+    elif "Heute" in date_str:  # German
+        date = datetime.today()
+    elif "Vandaag" in date_str:  # Dutch
+        date = datetime.today()
+    elif "Today" in date_str:  # English
+        date = datetime.today()
+    elif "Just posted" in date_str:  # English
         date = datetime.today()
     else:
-        date = None
-    
+        return date_str
+        
     if date:
         return date.strftime("%Y-%m-%d")
     else:
         return None
-
 
 
 def load_config(file_path):

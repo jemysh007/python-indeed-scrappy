@@ -106,7 +106,7 @@ try:
         job_cards = driver.find_elements(By.CSS_SELECTOR, 'div.job_seen_beacon')
         print(f"\nPage {page + 1} - Number of job cards found: {len(job_cards)}")
 
-        for card in job_cards:
+        for card in job_cards: 
             job_data = extract_job_details(card)
             job_link = job_data.get("Job Link", "")
 
@@ -130,7 +130,7 @@ except Exception as e:
     print(f"Error: {e}")
 
 finally:
-    # driver.quit()
+    driver.quit()
     print("ok")
 
 output_file_path = "job_data.json"

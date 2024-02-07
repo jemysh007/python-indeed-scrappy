@@ -14,7 +14,7 @@ class IndeedJobScraperGUI:
     def __init__(self, master):
         self.master = master
         self.master.title("Indeed Job Scraper")
-        self.master.geometry("400x400")
+        self.master.geometry("600x400")
 
         self.default_config = self.load_config("config.json")
         self.title_label = ttk.Label(self.master, text="Job Title:")
@@ -24,6 +24,7 @@ class IndeedJobScraperGUI:
         self.location_label = ttk.Label(self.master, text="Location:")
         self.location_entry = ttk.Entry(self.master, width=30)
         self.location_entry.insert(0, self.default_config["location"])
+        self.location_note = ttk.Label(self.master, text="Leaving this empty will search through the entire country", foreground="gray")
 
         self.pages_label = ttk.Label(self.master, text="Number of Pages:")
         self.pages_entry = ttk.Entry(self.master, width=30)
@@ -33,13 +34,13 @@ class IndeedJobScraperGUI:
         self.job_type_entry = ttk.Entry(self.master, width=30)
         self.job_type_entry.insert(0, self.default_config["job_type"])
 
-        self.job_type_info_label = ttk.Label(self.master, text="")
         job_type_info = "Available types: 1: Fulltime, 2: Permanent, 3: Parttime, 4: Subcontract"
-        self.job_type_info_label.config(text=job_type_info)
+        self.job_type_info_note = ttk.Label(self.master, text=job_type_info, foreground="gray")
 
         self.locale_label = ttk.Label(self.master, text="Locale:")
         self.locale_entry = ttk.Entry(self.master, width=30)
         self.locale_entry.insert(0, self.default_config["locale"])
+        self.locale_note = ttk.Label(self.master, text="Examples: nl, de, in", foreground="gray")
 
         self.run_button = ttk.Button(self.master, text="Fetch Data", command=self.run_script)
 
@@ -48,24 +49,26 @@ class IndeedJobScraperGUI:
 
         self.location_label.grid(row=1, column=0, padx=10, pady=10, sticky="w")
         self.location_entry.grid(row=1, column=1, padx=10, pady=10)
+        self.location_note.grid(row=2, column=1, padx=10, pady=0, sticky="w")
 
-        self.pages_label.grid(row=2, column=0, padx=10, pady=10, sticky="w")
-        self.pages_entry.grid(row=2, column=1, padx=10, pady=10)
+        self.pages_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
+        self.pages_entry.grid(row=3, column=1, padx=10, pady=10)
 
-        self.job_type_label.grid(row=3, column=0, padx=10, pady=10, sticky="w")
-        self.job_type_entry.grid(row=3, column=1, padx=10, pady=10)
-        self.job_type_info_label.grid(row=4, column=0, columnspan=2, padx=10, pady=10, sticky="w")
+        self.job_type_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
+        self.job_type_entry.grid(row=4, column=1, padx=10, pady=10)
+        self.job_type_info_note.grid(row=5, column=1, padx=10, pady=0, sticky="w")
 
-        self.locale_label.grid(row=5, column=0, padx=10, pady=10, sticky="w")
-        self.locale_entry.grid(row=5, column=1, padx=10, pady=10)
+        self.locale_label.grid(row=6, column=0, padx=10, pady=10, sticky="w")
+        self.locale_entry.grid(row=6, column=1, padx=10, pady=10)
+        self.locale_note.grid(row=7, column=1, padx=10, pady=0, sticky="w")
 
-        self.run_button.grid(row=6, column=0, columnspan=2, pady=10)
+        self.run_button.grid(row=8, column=0, columnspan=2, pady=10)
 
         self.export_button = ttk.Button(self.master, text="Export Database", command=self.export_database)
-        self.export_button.grid(row=8, column=0, columnspan=2, pady=10)
+        self.export_button.grid(row=9, column=0, columnspan=2, pady=10)
 
         self.clear_button = ttk.Button(self.master, text="Clear Database", command=self.clear_database)
-        self.clear_button.grid(row=9, column=0, columnspan=2, pady=10)
+        self.clear_button.grid(row=10, column=0, columnspan=2, pady=10)
 
     def export_database(self):
             title = self.title_entry.get()
