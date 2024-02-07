@@ -201,27 +201,34 @@ class IndeedJobScraper:
             print(f"Error: {e}")
 
 def convert_date(date_str):
-    if "Zojuist geplaatst" in date_str or "Vandaag" in date_str:
-        return datetime.today().strftime("%Y-%m-%d")  # Dutch
-    elif "Just posted" in date_str or "Today" in date_str:
-        return datetime.today().strftime("%Y-%m-%d")  # English
-    elif "Gerade geschaltet" in date_str or "Heute" in date_str:
-        return datetime.today().strftime("%Y-%m-%d")  # German
+    # English date strings
+    if "Just posted" in date_str or "Today" in date_str or "Active" in date_str:
+        return datetime.today().strftime("%Y-%m-%d")
+    elif "day ago" in date_str:
+        days_ago = int(date_str.split()[1])
+        return (datetime.today() - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+    elif "days ago" in date_str:
+        days_ago = int(date_str.split()[0])
+        return (datetime.today() - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+    
+    # German date strings
+    elif "Heute" in date_str or "Gerade geschaltet" in date_str or "Aktiv" in date_str:
+        return datetime.today().strftime("%Y-%m-%d")
+    elif "Vor" in date_str:
+        days_ago = int(date_str.split("Vor ")[1].split(" ")[0])
+        return (datetime.today() - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+    
+    # Dutch date strings
+    elif "Zojuist geplaatst" in date_str or "Vandaag" in date_str or "Actief" in date_str:
+        return datetime.today().strftime("%Y-%m-%d")
+    elif "dagen geleden" in date_str:
+        days_ago = int(date_str.split()[0])
+        return (datetime.today() - timedelta(days=days_ago)).strftime("%Y-%m-%d")
+    elif "dag geleden" in date_str:
+        return (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%d")
+    
+    return None
 
-    if "Aktiv" in date_str or "Actief" in date_str:
-        days_ago = int(date_str.split(":")[1].strip().split(" ")[0])
-        date = datetime.today() - timedelta(days=days_ago)
-    elif "Vor" in date_str or "geleden" in date_str or "vor" in date_str:
-        days_ago = int(date_str.split(" ")[1])
-        date = datetime.today() - timedelta(days=days_ago)
-    else:
-        date = None
-    
-    if date:
-        return date.strftime("%Y-%m-%d")
-    else:
-        return None
-    
 def load_config(file_path):
     abs_file_path = os.path.abspath(file_path)
     try:
