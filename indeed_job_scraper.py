@@ -106,19 +106,26 @@ class IndeedJobScraper:
             "Date": date,
         }
     
-    def scrape_jobs(self, designation, location, num_pages, job_type, locale="de"):
+    def scrape_jobs(self, designation, location, num_pages = "2", job_type = "fulltime", locale="de", switched_by = "All"):
         job_type = self.select_job_type(job_type)
         self.locale = locale
         self.location = location
         self.title = designation
         language = "in" if locale == "in" else "de" if locale == "de" else ""
 
+        if switched_by == "Employer":
+            switched_by_filter = "0bf:exrec(),"
+        elif switched_by == "Recruiter":
+            switched_by_filter = "0bf:exdh(),"
+        else:
+            switched_by_filter = ""
+                    
         try:
             for page in range(0, num_pages):
                 start_index = page * 10  # Each page displays 10 results, adjust as needed
-                url = f"https://{self.locale}.indeed.com/jobs?q={designation}&l={location}&start={start_index}&fromage=14&sort=date&lang={language}&sc=0kf%3Ajt({job_type})%3B"
-                
-                print(url)
+                # url = f"https://{self.locale}.indeed.com/jobs?q={designation}&l={location}&start={start_index}&fromage=14&sort=date&lang={language}&sc=0kf%3Ajt({job_type})%3B"
+                url = f"https://{self.locale}.indeed.com/jobs?q={designation}&l={location}&start={start_index}&fromage=14&sort=date&lang={language}&sc={switched_by_filter}kf%3Ajt({job_type})%3B"
+
                 self.driver.get(url)
                 time.sleep(7)  # Wait for the page to load (you might need to adjust this time)
 
@@ -151,21 +158,21 @@ class IndeedJobScraper:
             print("Scraping complete.")
             self.driver.quit()
 
-    def select_job_type(self, choice):
+    def select_job_type(self, choice = "Fulltime"):
        
         try:
-            choice = int(choice)
+            choice = str(choice)
         except ValueError:
             print("Invalid choice. Defaulting to full-time.")
-            return "fulltime"
+            return "Fulltime"
 
-        if choice == 1:
+        if choice == "Fulltime":
             job_type = "fulltime"
-        elif choice == 2:
+        elif choice == "Permanent":
             job_type = "permanent"
-        elif choice == 3:
+        elif choice == "Parttime":
             job_type = "parttime"
-        elif choice == 4:
+        elif choice == "Subcontract":
             job_type = "subcontract"
         else:
             print("Invalid choice. Defaulting to full-time.")
@@ -261,5 +268,6 @@ if __name__ == "__main__":
     config = load_config("config.json")
     print(config)
 
-    scraper.scrape_jobs(config['title'], config['location'], int(config['pages']), config['job_type'], config['locale'])
+    scraper.scrape_jobs(config['title'], config['location'], int(config['pages']), config['job_type'], config['locale']
+    )
     scraper.save_to_json()    

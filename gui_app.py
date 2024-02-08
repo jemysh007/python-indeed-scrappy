@@ -31,16 +31,17 @@ class IndeedJobScraperGUI:
         self.pages_entry.insert(0, self.default_config["pages"])
 
         self.job_type_label = ttk.Label(self.master, text="Job Type:")
-        self.job_type_entry = ttk.Entry(self.master, width=30)
-        self.job_type_entry.insert(0, self.default_config["job_type"])
-
-        job_type_info = "Available types: 1: Fulltime, 2: Permanent, 3: Parttime, 4: Subcontract"
-        self.job_type_info_note = ttk.Label(self.master, text=job_type_info, foreground="gray")
+        self.job_type_entry = tk.StringVar(value=self.default_config["job_type"])
+        self.job_type_dropdown = ttk.Combobox(self.master, textvariable=self.job_type_entry, values=["Fulltime", "Permanent", "Parttime", "Subcontract"], state="readonly")
 
         self.locale_label = ttk.Label(self.master, text="Locale:")
         self.locale_entry = ttk.Entry(self.master, width=30)
         self.locale_entry.insert(0, self.default_config["locale"])
         self.locale_note = ttk.Label(self.master, text="Examples: nl, de, in", foreground="gray")
+
+        self.switched_by_label = ttk.Label(self.master, text="Switched by:")
+        self.switched_by_entry = tk.StringVar(value="Employer")
+        self.switched_by_dropdown = ttk.Combobox(self.master, textvariable=self.switched_by_entry, values=["All", "Employer", "Recruiter"], state="readonly")
 
         self.run_button = ttk.Button(self.master, text="Fetch Data", command=self.run_script)
 
@@ -55,20 +56,20 @@ class IndeedJobScraperGUI:
         self.pages_entry.grid(row=3, column=1, padx=10, pady=10)
 
         self.job_type_label.grid(row=4, column=0, padx=10, pady=10, sticky="w")
-        self.job_type_entry.grid(row=4, column=1, padx=10, pady=10)
-        self.job_type_info_note.grid(row=5, column=1, padx=10, pady=0, sticky="w")
+        self.job_type_dropdown.grid(row=4, column=1, padx=10, pady=10)
 
-        self.locale_label.grid(row=6, column=0, padx=10, pady=10, sticky="w")
-        self.locale_entry.grid(row=6, column=1, padx=10, pady=10)
-        self.locale_note.grid(row=7, column=1, padx=10, pady=0, sticky="w")
+        self.locale_label.grid(row=5, column=0, padx=10, pady=10, sticky="w")
+        self.locale_entry.grid(row=5, column=1, padx=10, pady=10)
+        self.locale_note.grid(row=6, column=1, padx=10, pady=0, sticky="w")
 
-        self.run_button.grid(row=8, column=0, columnspan=2, pady=10)
+        self.switched_by_label.grid(row=7, column=0, padx=10, pady=10, sticky="w")
+        self.switched_by_dropdown.grid(row=7, column=1, padx=10, pady=10)
 
+        self.run_button = ttk.Button(self.master, text="Fetch Data", command=self.run_script)
         self.export_button = ttk.Button(self.master, text="Export Database", command=self.export_database)
-        self.export_button.grid(row=9, column=0, columnspan=2, pady=10)
+        self.run_button.grid(row=9, column=0, padx=10, pady=10, sticky="we")
+        self.export_button.grid(row=9, column=1, padx=10, pady=10, sticky="we")
 
-        self.clear_button = ttk.Button(self.master, text="Clear Database", command=self.clear_database)
-        self.clear_button.grid(row=10, column=0, columnspan=2, pady=10)
 
     def export_database(self):
             title = self.title_entry.get()
@@ -100,11 +101,12 @@ class IndeedJobScraperGUI:
         pages = self.pages_entry.get()
         job_type = self.job_type_entry.get()
         locale = self.locale_entry.get()
+        switched_by = self.switched_by_entry.get()
         
         self.update_config_callback()
 
         scraper = IndeedJobScraper()
-        scraper.scrape_jobs(title, location, int(pages), int(job_type), locale)
+        scraper.scrape_jobs(title, location, int(pages), job_type, locale, switched_by)
 
 
     def load_config(self, file_path):
@@ -124,7 +126,7 @@ class IndeedJobScraperGUI:
             "title": "web",
             "location": "Berlin",
             "pages": "2",
-            "job_type": "1",
+            "job_type": "Fulltime",
             "locale": "de"
         }
         with open(file_path, "w") as json_file:
