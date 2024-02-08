@@ -1,9 +1,11 @@
 import argparse
 import csv
-import sqlite3
+import mysql.connector
 from prettytable import PrettyTable
 import datetime
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class IndeedJobDatabaseManager:
     def __init__(self):
@@ -12,9 +14,20 @@ class IndeedJobDatabaseManager:
 
     def connect_to_database(self):
         try:
-            self.conn = sqlite3.connect("scrappy.db")
+            
+            print(os.getenv("DB_HOST"))
+            print(os.getenv("DB_USER"))
+            print(os.getenv("DB_PASSWORD"))
+            print(os.getenv("DB_NAME"))
+
+            self.conn = mysql.connector.connect(
+                host=os.getenv("DB_HOST"),
+                user=os.getenv("DB_USER"),
+                password=os.getenv("DB_PASSWORD"),
+                database=os.getenv("DB_NAME")
+            )
             print("Connected to the database")
-        except sqlite3.Error as e:
+        except mysql.connector.Error as e:
             print(f"Error: {e}")
 
     def view_data(self, location, title):
@@ -25,7 +38,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post, created_on
                     FROM indeed_jobs
-                    WHERE location_search LIKE ? 
+                    WHERE location_search LIKE %s
                     ORDER BY date_of_post DESC
                 """, (f"%{location}%",))
 
@@ -34,7 +47,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post, created_on
                     FROM indeed_jobs
-                    WHERE title_search LIKE ? 
+                    WHERE title_search LIKE %s
                     ORDER BY date_of_post DESC
                 """, (f"%{title}%",))
 
@@ -43,7 +56,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post, created_on
                     FROM indeed_jobs
-                    WHERE location_search LIKE ? AND title_search LIKE ? 
+                    WHERE location_search LIKE %s AND title_search LIKE %s
                     ORDER BY date_of_post DESC
                 """, (f"%{location}%", f"%{title}%"))
 
@@ -61,7 +74,7 @@ class IndeedJobDatabaseManager:
 
             print(table)
 
-        except sqlite3.Error as e:
+        except mysql.connector.Error as e:
             print(f"Error: {e}")
 
     def delete_data(self, location, title):
@@ -69,23 +82,24 @@ class IndeedJobDatabaseManager:
             cursor = self.conn.cursor()
             cursor.execute("""
                 DELETE FROM indeed_jobs
-                WHERE location_search LIKE ? AND title_search LIKE ?
+                WHERE location_search LIKE %s AND title_search LIKE %s
             """, (f"%{location}%", f"%{title}%"))
 
             self.conn.commit()
             print(f"Data deleted successfully.")
 
-        except sqlite3.Error as e:
+        except mysql.connector.Error as e:
             print(f"Error: {e}")
 
     def clear_table(self):
         try:
             cursor = self.conn.cursor()
-            cursor.execute("DELETE FROM indeed_jobs")
+            cursor.execute("TRUNCATE TABLE indeed_jobs")
+            cursor.execute("ALTER TABLE indeed_jobs AUTO_INCREMENT = 1")  # Reset auto-increment primary key
             self.conn.commit()
             print("Table indeed_jobs cleared successfully.")
 
-        except sqlite3.Error as e:
+        except mysql.connector.Error as e:
             print(f"Error: {e}")
 
     def export_data(self, location, title):
@@ -95,7 +109,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post, search_query, job_type
                     FROM indeed_jobs
-                    WHERE location_search LIKE ? 
+                    WHERE location_search LIKE %s
                     ORDER BY date_of_post DESC
                 """, (f"%{location}%",))
 
@@ -103,7 +117,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post, search_query, job_type
                     FROM indeed_jobs
-                    WHERE title_search LIKE ? 
+                    WHERE title_search LIKE %s
                     ORDER BY date_of_post DESC
                 """, (f"%{title}%",))
 
@@ -111,7 +125,7 @@ class IndeedJobDatabaseManager:
                 cursor.execute("""
                     SELECT id, title, company, job_link, location, date_of_post, search_query, job_type
                     FROM indeed_jobs
-                    WHERE location_search LIKE ? AND title_search LIKE ? 
+                    WHERE location_search LIKE %s AND title_search LIKE %s
                     ORDER BY date_of_post DESC
                 """, (f"%{location}%", f"%{title}%"))
 
@@ -136,7 +150,7 @@ class IndeedJobDatabaseManager:
 
             print(f"Data exported to {export_file_path}")
 
-        except sqlite3.Error as e:
+        except mysql.connector.Error as e:
             print(f"Error: {e}")
 
 if __name__ == "__main__":
